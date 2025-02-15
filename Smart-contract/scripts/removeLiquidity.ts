@@ -15,16 +15,28 @@ const main = async () => {
   const DAI = await ethers.getContractAt("IERC20", DAIAddress);
   const ROUTER = await ethers.getContractAt("IUniswapV2Router02", UNIRouter);
 
-  const pairAddress = await ROUTER.factory().getPair(USDCAddress, DAIAddress);
+  console.log("Getting Pair Address for Uniswap Router...");
+  const factoryAddress = await ROUTER.factory();
+  const factory = await ethers.getContractAt("IUniswapV2Factory", factoryAddress);
+
+  const pairAddress = await factory.getPair(USDCAddress, DAIAddress);
   const LPToken = await ethers.getContractAt("IERC20", pairAddress);
 
-  const liquidity = await LPToken.balanceOf(impersonatedSigner.address);
+
+  const liquidityBF = await LPToken.balanceOf(impersonatedSigner.address);
+  console.log("Liquidity Token Balance BF Burn:", liquidityBF);
+
+  console.log("Approving LP tokens to be burnt");
+
+  await LPToken.connect(impersonatedSigner).approve(UNIRouter, liquidityBF);
+
   const deadline = Math.floor(Date.now() / 1000) + 60 * 10;
 
+  console.log("Removing Liquidity . . . .");
   const tx = await ROUTER.connect(impersonatedSigner).removeLiquidity(
     USDCAddress,
     DAIAddress,
-    liquidity,
+    liquidityBF,
     0,
     0,
     impersonatedSigner.address,
@@ -32,7 +44,12 @@ const main = async () => {
   );
   await tx.wait();
 
-  console.log("removeLiquidity executed!");
+  console.log("removeLiquidity executed!", tx.hash);
+
+  const liquidityAF = await LPToken.balanceOf(impersonatedSigner.address);
+
+  console.log("Liquidity Token Balance AF Burn:", liquidityAF);
+
 };
 
 main().catch((error) => {

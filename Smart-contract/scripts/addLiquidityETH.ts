@@ -13,12 +13,21 @@ const main = async () => {
   const DAI = await ethers.getContractAt("IERC20", DAIAddress);
   const ROUTER = await ethers.getContractAt("IUniswapV2Router02", UNIRouter);
 
-  const amountTokenDesired = ethers.parseUnits("100", 18);
-  const amountETHDesired = ethers.parseEther("1");
-  const deadline = Math.floor(Date.now() / 1000) + 60 * 10;
+  const amountTokenDesired = ethers.parseUnits("10000", 18); 
+  const amountETHDesired = ethers.parseUnits("100", 18);
+  const deadline = Math.floor(Date.now() / 1000) + 60 * 10; 
 
+  // Balance before adding liquidity
+  const daiBalanceBefore = await DAI.balanceOf(impersonatedSigner.address);
+  const ethBalanceBefore = await impersonatedSigner.provider.getBalance(impersonatedSigner.address);
+
+  console.log("DAI Balance Before:", ethers.formatUnits(daiBalanceBefore, 18));
+  console.log("ETH Balance Before:", ethers.formatUnits(ethBalanceBefore, 18));
+
+  // Approve DAI for the Uniswap Router
   await DAI.connect(impersonatedSigner).approve(UNIRouter, amountTokenDesired);
 
+  // Add liquidity
   const tx = await ROUTER.connect(impersonatedSigner).addLiquidityETH(
     DAIAddress,
     amountTokenDesired,
@@ -30,7 +39,14 @@ const main = async () => {
   );
   await tx.wait();
 
-  console.log("addLiquidityETH executed!");
+  console.log("addLiquidityETH executed!", tx.hash);
+
+  // Balance after adding liquidity
+  const daiBalanceAfter = await DAI.balanceOf(impersonatedSigner.address);
+  const ethBalanceAfter = await impersonatedSigner.provider.getBalance(impersonatedSigner.address);
+
+  console.log("DAI Balance After:", ethers.formatUnits(daiBalanceAfter, 18));
+  console.log("ETH Balance After:", ethers.formatUnits(ethBalanceAfter, 18));
 };
 
 main().catch((error) => {
