@@ -17,17 +17,23 @@ const main = async () => {
   const amountETHDesired = ethers.parseUnits("100", 18);
   const deadline = Math.floor(Date.now() / 1000) + 60 * 10; 
 
+
+  console.log("Getting Token Balance...");
   // Balance before adding liquidity
   const daiBalanceBefore = await DAI.balanceOf(impersonatedSigner.address);
   const ethBalanceBefore = await impersonatedSigner.provider.getBalance(impersonatedSigner.address);
-
+ 
   console.log("DAI Balance Before:", ethers.formatUnits(daiBalanceBefore, 18));
   console.log("ETH Balance Before:", ethers.formatUnits(ethBalanceBefore, 18));
 
+  
   // Approve DAI for the Uniswap Router
+  console.log("Approving tokens for Uniswap Router...");
   await DAI.connect(impersonatedSigner).approve(UNIRouter, amountTokenDesired);
 
+
   // Add liquidity
+  console.log("Adding liquidity to Uniswap...");
   const tx = await ROUTER.connect(impersonatedSigner).addLiquidityETH(
     DAIAddress,
     amountTokenDesired,
@@ -39,7 +45,8 @@ const main = async () => {
   );
   await tx.wait();
 
-  console.log("addLiquidityETH executed!", tx.hash);
+  console.log("addLiquidityETH executed at:", tx.hash);
+
 
   // Balance after adding liquidity
   const daiBalanceAfter = await DAI.balanceOf(impersonatedSigner.address);

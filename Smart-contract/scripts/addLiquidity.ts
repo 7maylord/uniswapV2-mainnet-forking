@@ -1,4 +1,5 @@
 import { ethers } from "hardhat";
+import { text } from "stream/consumers";
 const helpers = require("@nomicfoundation/hardhat-toolbox/network-helpers");
 
 const main = async () => {
@@ -30,7 +31,7 @@ const main = async () => {
   approveTx = await DAI.connect(impersonatedSigner).approve( UNIRouter, amountBDesired);
   await approveTx.wait();
 
-  console.log("Token approvals successful!");
+  console.log("Token approvals successful at:", approveTx.hash);
 
   // Check Balances Before Adding Liquidity
   const usdcBalBefore = await USDC.balanceOf(impersonatedSigner.address);
@@ -58,7 +59,7 @@ const main = async () => {
 
   await addLiquidityTx.wait();
 
-  console.log("Liquidity successfully added!");
+  console.log("Liquidity successfully added at:", addLiquidityTx.hash);
 
   // Check Balances After Adding Liquidity
   const usdcBalAfter = await USDC.balanceOf(impersonatedSigner.address);

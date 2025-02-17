@@ -22,6 +22,12 @@ const main = async () => {
   const pairAddress = await factory.getPair(USDCAddress, DAIAddress);
   const LPToken = await ethers.getContractAt("IERC20", pairAddress);
 
+  // Check Balances Before Adding Liquidity
+  const usdcBalBefore = await USDC.balanceOf(impersonatedSigner.address);
+  const daiBalBefore = await DAI.balanceOf(impersonatedSigner.address);
+
+  console.log("USDC Balance Before:", ethers.formatUnits(usdcBalBefore, 6));
+  console.log("DAI Balance Before:", ethers.formatUnits(daiBalBefore, 18));
 
   const liquidityBF = await LPToken.balanceOf(impersonatedSigner.address);
   console.log("Liquidity Token Balance BF Burn:", liquidityBF);
@@ -44,7 +50,14 @@ const main = async () => {
   );
   await tx.wait();
 
-  console.log("removeLiquidity executed!", tx.hash);
+  console.log("removeLiquidity executed at:", tx.hash);
+
+  // Check Balances After Adding Liquidity
+  const usdcBalAfter = await USDC.balanceOf(impersonatedSigner.address);
+  const daiBalAfter = await DAI.balanceOf(impersonatedSigner.address);
+
+  console.log("USDC Balance After:", ethers.formatUnits(usdcBalAfter, 6));
+  console.log("DAI Balance After:", ethers.formatUnits(daiBalAfter, 18));
 
   const liquidityAF = await LPToken.balanceOf(impersonatedSigner.address);
 

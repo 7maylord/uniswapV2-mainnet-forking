@@ -8,8 +8,10 @@ const main = async () => {
 
   const USDCHolder = "0xf584f8728b874a6a5c7a8d4d387c9aae9172d621";
 
+  console.log("Impersonating account:", USDCHolder);
   await helpers.impersonateAccount(USDCHolder);
   const impersonatedSigner = await ethers.getSigner(USDCHolder);
+  console.log("Signer address:", impersonatedSigner.address);
 
   const USDC = await ethers.getContractAt("IERC20", USDCAddress);
   const DAI = await ethers.getContractAt("IERC20", DAIAddress);
@@ -19,8 +21,17 @@ const main = async () => {
   const amountOutMin = ethers.parseUnits("90", 18);
   const deadline = Math.floor(Date.now() / 1000) + 60 * 10;
 
-  await USDC.connect(impersonatedSigner).approve(UNIRouter, amountIn);
+  const usdcBalanceBefore = await USDC.balanceOf(impersonatedSigner.address);
+  const daiBalanceBefore = await DAI.balanceOf(impersonatedSigner.address);
 
+  console.log("USDC Balance before swap:", ethers.formatUnits(usdcBalanceBefore, 6));
+  console.log("DAI Balance before swap:", ethers.formatUnits(daiBalanceBefore, 18));
+
+  console.log("Approving Uniswap Router to spend USDC...");
+  await USDC.connect(impersonatedSigner).approve(UNIRouter, amountIn);
+  console.log("Approval successful!");
+
+  console.log("Executing swap: USDC -> DAI...");
   const tx = await ROUTER.connect(impersonatedSigner).swapExactTokensForTokens(
     amountIn,
     amountOutMin,
@@ -29,11 +40,16 @@ const main = async () => {
     deadline
   );
   await tx.wait();
-
   console.log("swapExactTokensForTokens executed!");
+
+  const usdcBalanceAfter = await USDC.balanceOf(impersonatedSigner.address);
+  const daiBalanceAfter = await DAI.balanceOf(impersonatedSigner.address);
+
+  console.log("USDC Balance after swap:", ethers.formatUnits(usdcBalanceAfter, 6));
+  console.log("DAI Balance after swap:", ethers.formatUnits(daiBalanceAfter, 18));
 };
 
 main().catch((error) => {
-  console.error(error);
+  console.error("Error encountered:", error);
   process.exitCode = 1;
 });
